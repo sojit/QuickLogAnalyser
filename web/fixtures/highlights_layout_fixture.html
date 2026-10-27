@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Highlights layout fixture · QuickAnalyser</title>
+  <link rel="stylesheet" href="/styles/app.css" />
+  <style>
+    body { margin: 0; padding: 1rem; font-family: "Segoe UI", system-ui, sans-serif; }
+    #status { margin-bottom: 1rem; font-weight: 600; }
+    #status.pass { color: #0a7a32; }
+    #status.fail { color: #b00020; }
+    .viewport-label { margin: 0.5rem 0; color: var(--muted, #666); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <p id="status">Loading…</p>
+  <p class="viewport-label" id="vp"></p>
+  <div id="host"></div>
+  <script src="/scripts/highlights_layout.js"></script>
+  <script>
+    (function () {
+      const HL = window.QAHighlightsLayout;
+      const jobId = "fixturejobfixturejobfixturejob12";
+      const sourceId = "fixturesourcefixturesourcefix01";
+      const sourcePath = "NX_snapshot.tar.gz/NX_snapshot/nxserver/log/FastUpdateServer.log";
+      const groups = [
+        {
+          severity: "error",
+          categories: "severity",
+          count: 4,
+          line_start: 8898,
+          line_end: 8898,
+          raw_time: "2026-10-23 11:38:12",
+          message: "ERROR sanitized fixture line one",
+          source_id: sourceId,
+          path: sourcePath,
+        },
+        {
+          severity: "error",
+          categories: "severity",
+          count: 4,
+          line_start: 8899,
+          line_end: 9015,
+          raw_time: "2026-10-23 11:38:12",
+          message: "ERROR sanitized fixture\nmultiline body with a very long path context that should wrap safely without displacing the Open control or metadata gutters.",
+          source_id: sourceId,
+          path: sourcePath,
+        },
+      ];
+      const html = HL.renderFileBlock({
+        jobId,
+        sourceId,
+        path: sourcePath,
+        groups,
+        fileHref: `/viewer.html?job=${jobId}&source=${sourceId}`,
+        rangeHrefFor: (g) =>
+          `/viewer.html?job=${jobId}&source=${g.source_id}&line=${g.line_start}&line_end=${g.line_end}`,
+        esc: HL.defaultEsc,
+      });
+      document.getElementById("host").innerHTML = html;
+      const analysis = HL.analyzeMarkup(html);
+      const status = document.getElementById("status");
+      const ok =
+        analysis.ok &&
+        html.includes("line=8898") &&
+        html.includes("line_end=9015") &&
+        !/hl-issue-meta[\s\S]*FastUpdateServer\.log/.test(html);
+      status.textContent = ok
+        ? "PASS · one header, two Lines links, no repeated path in meta"
+        : "FAIL · " + JSON.stringify(analysis);
+      status.className = ok ? "pass" : "fail";
+      document.title = ok ? "HL_LAYOUT_PASS" : "HL_LAYOUT_FAIL";
+      const updateVp = () => {
+        document.getElementById("vp").textContent =
+          "viewport " + window.innerWidth + "×" + window.innerHeight +
+          " · dpr " + window.devicePixelRatio;
+      };
+      updateVp();
+      window.addEventListener("resize", updateVp);
+      window.__hlLayoutFixture = { ok, analysis, html };
+    })();
+  </script>
+</body>
+</html>

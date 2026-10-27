@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QuickAnalyser</title>
+  <link rel="stylesheet" href="/styles/app.css" />
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand" id="brand">QuickAnalyser</div>
+    <nav>
+      <button type="button" id="nav-upload">Upload Snapshot</button>
+      <button type="button" id="nav-previous">Previous Analyses</button>
+      <button type="button" id="nav-settings">Settings</button>
+      <button type="button" id="nav-diagnostics">Diagnostics</button>
+      <button type="button" id="nav-about">About</button>
+      <button type="button" class="btn" id="btn-quit">Quit</button>
+    </nav>
+  </header>
+
+  <main>
+    <p class="storage-indicator" id="storage-indicator">Storage: …</p>
+    <div id="active-banner" class="panel hidden" style="display:flex;justify-content:space-between;align-items:center;gap:1rem;border-color:var(--accent)">
+      <div>
+        <strong id="active-banner-title">Background analysis</strong>
+        <div class="muted" id="active-banner-text">An analysis is running.</div>
+      </div>
+      <button type="button" class="btn primary" id="btn-resume-active">Return to processing</button>
+    </div>
+    <section id="view-storage" class="view panel panel-narrow hidden">
+      <h1>Storage setup</h1>
+      <p class="muted">Where should snapshots and analysis data be stored? Executable location and data location are independent.</p>
+      <label><input type="radio" name="storage-mode" value="default" checked /> Default user-data location</label><br />
+      <label><input type="radio" name="storage-mode" value="custom" /> Choose a working directory</label><br />
+      <label><input type="radio" name="storage-mode" value="portable" /> Portable: QuickAnalyserData beside the executable</label>
+      <div id="custom-path-row" class="hidden" style="margin-top:0.8rem">
+        <label>Working directory<br /><input id="custom-path" type="text" placeholder="D:\QuickAnalyserData" /></label>
+      </div>
+      <p class="muted" style="margin-top:0.8rem">Selected root: <span id="storage-root-display"></span> · Available space: <span id="storage-free"></span></p>
+      <button type="button" class="btn primary" id="btn-use-storage">Use this location</button>
+    </section>
+
+    <section id="view-upload" class="view panel panel-narrow hidden">
+      <h1>Upload snapshot</h1>
+      <p class="muted">Supported containers: .tar, .tar.gz, .tgz (nested archives and gzip text logs). Product identity is optional enrichment — unknown products still receive generic analysis.</p>
+      <input id="file-input" type="file" accept=".tar,.gz,.tgz,.tar.gz" />
+      <p id="selected-name" class="muted">No file selected</p>
+      <button type="button" class="btn primary" id="btn-upload">Start analysis</button>
+      <button type="button" class="btn hidden" id="btn-upload-resume">Return to running analysis</button>
+      <p id="upload-status" class="muted"></p>
+    </section>
+
+    <section id="view-progress" class="view panel hidden">
+      <h1>Processing</h1>
+      <p id="prog-state">…</p>
+      <div class="progress"><span id="prog-bar"></span></div>
+      <p id="prog-pct" class="muted"></p>
+      <p id="prog-msg" class="muted"></p>
+      <p id="prog-files" class="muted"></p>
+      <p id="prog-elapsed" class="muted"></p>
+      <button type="button" class="btn" id="btn-cancel">Cancel</button>
+    </section>
+
+    <section id="view-results" class="view hidden">
+      <div class="workspace-header" id="workspace-header">
+        <div class="workspace-left">
+          <p id="viewing-identity" class="workspace-identity muted hidden"></p>
+          <div class="tabs" role="tablist" aria-label="Analysis views">
+            <button type="button" class="btn result-tab active" data-tab="overview" role="tab" aria-selected="true">Overview</button>
+            <button type="button" class="btn result-tab" data-tab="highlights" role="tab" aria-selected="false">Log Highlights</button>
+            <button type="button" class="btn result-tab" data-tab="viewer" role="tab" aria-selected="false">Log Viewer</button>
+            <button type="button" class="btn result-tab" data-tab="configuration" role="tab" aria-selected="false">Configuration</button>
+            <button type="button" class="btn result-tab" data-tab="coverage" role="tab" aria-selected="false">Processing Details</button>
+          </div>
+        </div>
+        <div id="workspace-controls" class="workspace-controls" aria-label="Active view controls"></div>
+      </div>
+      <div id="workspace-status" class="workspace-status muted" aria-live="polite"></div>
+      <div id="result-body" class="result-body-fill"></div>
+    </section>
+
+    <section id="view-previous" class="view panel hidden">
+      <h1>Previous analyses</h1>
+      <ul class="list" id="previous-list"></ul>
+    </section>
+
+    <section id="view-about" class="view panel panel-narrow hidden">
+      <h1>About</h1>
+      <p>QuickAnalyser · by Soji · MIT License · Copyright (c) 2026 Soji</p>
+      <pre id="about-body"></pre>
+    </section>
+
+    <section id="view-diagnostics" class="view panel panel-narrow hidden">
+      <h1>Diagnostics</h1>
+      <p class="muted">Local application operational logs under the selected storage root. No telemetry or automatic upload.</p>
+      <pre id="diag-status" class="muted" style="white-space:pre-wrap"></pre>
+      <div class="row" style="margin-top:0.8rem;flex-wrap:wrap;gap:0.5rem">
+        <button type="button" class="btn" id="btn-diag-refresh">Refresh status</button>
+        <button type="button" class="btn" id="btn-diag-debug">Enable DEBUG (temporary)</button>
+        <button type="button" class="btn" id="btn-diag-info">Disable DEBUG</button>
+        <button type="button" class="btn primary" id="btn-diag-bundle">Create local support bundle</button>
+      </div>
+      <p id="diag-msg" class="muted"></p>
+      <p class="muted" style="margin-top:0.8rem">CLI: <code>--log-level debug</code> · <code>--debug-minutes 15</code></p>
+    </section>
+  </main>
+
+  <footer>
+    <span id="footer-meta">QuickAnalyser · by Soji</span>
+    <span>Local offline processing · no telemetry</span>
+  </footer>
+
+  <script src="/scripts/highlights_layout.js"></script>
+  <script src="/scripts/app.js"></script>
+</body>
+</html>

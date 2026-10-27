@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system_info>
+  <system_unused>ignore</system_unused>
+  <system_hostname>sgve-example</system_hostname>
+  <system_ip>192.0.2.10</system_ip>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_placeholder>x</system_placeholder>
+  <system_protocol_pack_version>3.275.216</system_protocol_pack_version>
+  <system_aos_version>20.20.10 Build 257</system_aos_version>
+  <system_device_type>SGVE</system_device_type>
+</system_info>

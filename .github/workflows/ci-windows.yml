@@ -1,0 +1,135 @@
+# Windows CI for QuickAnalyser. Minimal permissions; no customer data.
+name: ci-windows
+
+on:
+  push:
+    branches: [main, 'feature/**', 'fix/**', 'docs/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: write # retain verified portable ZIP artifact after CI
+
+concurrency:
+  group: ci-windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: test-vet-markup-build
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      GO_VERSION: '1.22.12'
+      NODE_VERSION: '20.18.1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Verify module sum integrity (no rewrite)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Copy-Item go.mod go.mod.before -Force
+          Copy-Item go.sum go.sum.before -Force
+          go mod verify
+          if ($LASTEXITCODE -ne 0) { throw 'go mod verify failed' }
+          go mod download
+          if ($LASTEXITCODE -ne 0) { throw 'go mod download failed' }
+          $modChanged = (Get-FileHash go.mod).Hash -ne (Get-FileHash go.mod.before).Hash
+          $sumChanged = (Get-FileHash go.sum).Hash -ne (Get-FileHash go.sum.before).Hash
+          if ($modChanged -or $sumChanged) {
+            throw 'go.mod/go.sum changed during verify/download; refuse rewrite'
+          }
+          Remove-Item go.mod.before, go.sum.before -Force
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: go test
+        run: go test ./... -count=1
+
+      - name: Highlights markup regression (Node)
+        run: node scripts/highlights_markup_test.cjs
+
+      - name: Build metadata unit cases
+        shell: pwsh
+        run: .\scripts\test_build_metadata.ps1
+
+      - name: Release entry-point ordering regressions
+        shell: pwsh
+        run: .\scripts\test_release_entrypoint.ps1
+
+      - name: Development Windows build (accurate metadata)
+        shell: pwsh
+        run: .\scripts\build.ps1
+
+      - name: Portable package + identity/checksum check
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\scripts\package_windows.ps1
+          $stage = Get-ChildItem dist\package -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          $info = Get-Content (Join-Path $stage.FullName 'BUILD_INFO.json') -Raw | ConvertFrom-Json
+          $extract = Join-Path $env:TEMP ('qa-ci-pkg-' + [guid]::NewGuid().ToString('n'))
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          $zip = Get-ChildItem dist\*.zip | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          Expand-Archive -LiteralPath $zip.FullName -DestinationPath $extract -Force
+          Get-Content (Join-Path $extract 'SHA256SUMS.txt') | Where-Object { $_ -match '\S' } | ForEach-Object {
+            if ($_ -notmatch '^([A-Fa-f0-9]+)\s+(.+)$') { throw "bad checksum line: $_" }
+            $want = $Matches[1].ToUpperInvariant()
+            $rel = $Matches[2].Trim()
+            $fp = Join-Path $extract ($rel.Replace('/','\'))
+            $got = (Get-FileHash -LiteralPath $fp -Algorithm SHA256).Hash
+            if ($got -ne $want) { throw "checksum mismatch $rel" }
+          }
+          # Packaged exe About must match BUILD_INFO identity (same build_time).
+          $data = Join-Path $env:TEMP ('qa-ci-run-' + [guid]::NewGuid().ToString('n'))
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+          $out = Join-Path $env:TEMP 'qa-ci-run-out.txt'
+          $exe = Join-Path $extract 'QuickAnalyser.exe'
+          $proc = Start-Process $exe -ArgumentList '--data-dir',$data,'--no-browser' -PassThru -RedirectStandardOutput $out -WindowStyle Hidden
+          $deadline = (Get-Date).AddSeconds(20)
+          $boot = ''
+          do {
+            Start-Sleep -Milliseconds 300
+            if (Test-Path $out) { $boot = Get-Content $out -Raw }
+          } while ($boot -notmatch '127\.0\.0\.1:(\d+)' -and (Get-Date) -lt $deadline)
+          if ($boot -notmatch '127\.0\.0\.1:(\d+)') { throw 'packaged exe did not listen' }
+          $port = $Matches[1]
+          $sess = (Invoke-RestMethod "http://127.0.0.1:$port/api/session").session
+          $about = Invoke-RestMethod -Headers @{ 'X-QA-Session' = $sess } "http://127.0.0.1:$port/api/about"
+          if ($about.buildTime -ne $info.build_time -or $about.commit -ne $info.commit -or $about.dirty -ne $info.dirty) {
+            throw "identity mismatch about=$($about | ConvertTo-Json -Compress) info=$($info | ConvertTo-Json -Compress)"
+          }
+          Invoke-RestMethod -Headers @{ 'X-QA-Session' = $sess } -Method Post "http://127.0.0.1:$port/api/quit" | Out-Null
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          Write-Host 'package identity/checksum OK'
+
+      - name: Confirm binary exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist\QuickAnalyser.exe)) { throw 'missing dist/QuickAnalyser.exe' }
+          Get-Item dist\QuickAnalyser.exe | Format-List Name, Length, LastWriteTime
+
+      - name: Retain verified portable development package
+        uses: actions/upload-artifact@v4
+        with:
+          name: QuickAnalyser-windows-amd64-development
+          path: |
+            dist/*-windows-amd64-dev.zip
+            dist/*-windows-amd64-dev.zip.sha256
+          if-no-files-found: error
+          retention-days: 14

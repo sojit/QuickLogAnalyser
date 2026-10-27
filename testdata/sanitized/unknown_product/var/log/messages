@@ -1,0 +1,10 @@
+﻿Oct 24 10:00:01 unknown-host-01 kernel: eth0: Link is Down
+Oct 24 10:00:05 unknown-host-01 kernel: eth0: Link is Up
+Oct 24 10:01:00 unknown-host-01 app: ERROR database connection timed out
+Oct 24 10:01:01 unknown-host-01 app: WARNING retrying connection
+Oct 24 10:02:00 unknown-host-01 app: INFO service recovered
+Oct 24 10:03:00 unknown-host-01 app: OutOfMemoryError: Java heap space
+Oct 24 10:03:01 unknown-host-01 app:   at com.example.Main.run(Main.java:42)
+Oct 24 10:04:00 unknown-host-01 app: Error description = null during successful update
+Oct 24 10:05:00 unknown-host-01 app: installed package libgpg-error
+Oct 24 10:06:00 unknown-host-01 app: duplicate keyword keyword on one line

@@ -1,0 +1,4 @@
+2026-10-24T08:00:00Z WARN link flapping detected on port 3
+2026-10-24T08:00:01Z ERROR connection reset by peer
+2026-10-24T08:00:02Z INFO connection established
+2026-10-24T08:00:03Z CRITICAL certificate has expired

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Source — QuickAnalyser</title>
+  <link rel="stylesheet" href="/styles/app.css" />
+</head>
+<body class="viewer-page">
+  <header class="viewer-chrome" id="viewer-chrome">
+    <div class="viewer-title-row">
+      <div class="viewer-brand">
+        <span class="brand">QuickAnalyser</span>
+        <span class="muted">· by Soji</span>
+      </div>
+      <div class="viewer-file">
+        <span id="path-title" class="path-primary">Source</span>
+        <details class="path-expand">
+          <summary>Full path</summary>
+          <code id="path-full" class="path-full"></code>
+          <button type="button" class="btn" id="btn-copy-path">Copy path</button>
+        </details>
+      </div>
+      <div class="viewer-search-row">
+        <input id="query" type="search" placeholder="Find text in entire retained source" aria-label="Content search" />
+        <button type="button" class="btn primary" id="btn-search">Search</button>
+        <button type="button" class="btn" id="btn-clear">Clear</button>
+      </div>
+    </div>
+    <div class="viewer-nav-row">
+      <button type="button" class="btn" id="btn-start">Start</button>
+      <button type="button" class="btn" id="btn-nav-prev" title="Fallback: jump one section earlier">Earlier</button>
+      <label class="goto-label">Go to line <input id="goto-line" type="number" min="1" step="1" /></label>
+      <button type="button" class="btn" id="btn-goto">Go</button>
+      <button type="button" class="btn" id="btn-nav-next" title="Fallback: jump one section later">Later</button>
+      <button type="button" class="btn" id="btn-end">End</button>
+      <label><input type="checkbox" id="case" /> Case sensitive</label>
+      <label><input type="checkbox" id="matching-only" checked /> Matching lines only</label>
+      <label><input type="checkbox" id="wrap-lines" checked /> Wrap lines</label>
+      <button type="button" class="btn" id="btn-prev" style="display:none">Previous search page</button>
+      <button type="button" class="btn" id="btn-next" style="display:none">Next search page</button>
+    </div>
+    <div class="viewer-status-row">
+      <p id="count" class="muted status-chip" aria-live="polite"></p>
+      <p id="coverage-note" class="muted status-chip"></p>
+      <p id="range-note" class="muted status-chip"></p>
+      <p id="virt-status" class="virt-status muted status-chip" aria-live="polite"></p>
+      <details class="viewer-tech-details" id="viewer-tech-details">
+        <summary>Details</summary>
+        <p id="path-detail" class="muted"></p>
+        <p id="virt-tech" class="muted"></p>
+        <p class="muted">Continuous scroll · Earlier/Later are fallbacks · matching-line count is final only when search completes</p>
+        <p class="muted">QuickAnalyser · by Soji · local offline</p>
+      </details>
+    </div>
+  </header>
+  <main class="viewer-main">
+    <div id="source-view" class="source-scroller" aria-label="Source content" tabindex="0">
+      <div id="virt-top" class="virt-spacer" aria-hidden="true"></div>
+      <div id="virt-sections"></div>
+      <div id="virt-bottom" class="virt-spacer" aria-hidden="true"></div>
+    </div>
+  </main>
+  <script src="/scripts/viewer_model.js"></script>
+  <script src="/scripts/viewer.js"></script>
+</body>
+</html>
