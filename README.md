@@ -6,11 +6,29 @@ Local, offline review of device snapshot archives with evidence-backed product a
 
 ## Status and downloads
 
-**Development preview — not a stable release.** Planned version: QA-v1.0-2026. Portable Windows amd64 ZIPs are supplied separately from source. A source download does not contain the executable. Review BUILD_INFO.json and SHA256 checksums for the exact package identity.
+**Development preview — not a stable release.** Planned version: QA-v1.0-2026. This Git repository contains **source only** (no EXE or ZIP in history).
 
-## Run the portable package
+### Portable Windows package (development)
 
-Extract the entire Windows ZIP and launch QuickAnalyser.exe. Choose a writable local working-data folder. No separate Go, Node, Python, SQLite service or installer is needed for packaged execution. The engine serves its embedded UI on local loopback and opens a browser. Use Quit to stop it. Clean-host/platform/resource qualification is still incomplete.
+Download the CI-built portable ZIP for a specific commit from GitHub Actions (artifact retention is limited):
+
+1. Open [Actions → ci-windows](https://github.com/sojit/QuickLogAnalyser/actions/workflows/ci-windows.yml).
+2. Open a successful run on `main`.
+3. Download artifact **`QuickAnalyser-windows-amd64-development`** (`QA-v1.0-2026-windows-amd64-dev.zip` + `.sha256` sidecar).
+
+Example for the initial public commit (`1dd60a6`):  
+https://github.com/sojit/QuickLogAnalyser/actions/runs/40568083061
+
+GitHub Release assets are used only when the owner approves a release/tag. A stable `QA-v1.0-2026` release is separate and not claimed here.
+
+### Run the portable package
+
+1. Extract the **entire** ZIP into a folder you choose.
+2. Run **`QuickAnalyser.exe`**.
+3. Select a suitable **working-storage** location when prompted.
+4. Use Quit in the app to stop the local engine (closing a browser tab alone may not).
+
+No separate Go, Node, Python, SQLite service or installer is required for packaged execution. Review `BUILD_INFO.json` and the SHA-256 sidecar for package identity. Clean-host/platform/resource qualification is still incomplete.
 
 - [Quick Start](docs/user/QUICK_START.md)
 - [User Guide](docs/user/USER_GUIDE.md)
